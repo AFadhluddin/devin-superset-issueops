@@ -1,0 +1,7 @@
+{
+  "issueNumber": 1,
+  "issueTitle": "Frontend: dashboard filter label formatter should preserve numeric zero values",
+  "issueUrl": "https://github.com/AFadhluddin/superset/issues/1",
+  "issueBody": "## Summary\nDashboard filter indicators and badges display blank values when a native filter is set to numeric `0`.\n\n## Expected behavior\n- `0` should display as `\"0\"` in filter badges, tooltips, and indicators.\n- `null`, `undefined`, and empty string should continue to be treated as missing/empty.\n\n## Actual behavior\nWhen a filter value is `0`, the displayed label is empty. Non-zero numeric values render correctly.\n\n## Affected area\n`getFilterValueForDisplay()` in `superset-frontend/src/dashboard/components/nativeFilters/utils.ts` — used by `FilterIndicator` and `CustomizationsBadge`.\n\n## Acceptance criteria\n- [ ] `getFilterValueForDisplay(0)` returns `\"0\"`\n- [ ] `getFilterValueForDisplay(null)`, `getFilterValueForDisplay(undefined)`, and `getFilterValueForDisplay('')` still return `\"\"`\n- [ ] Dashboard filter badge shows `0` when a numeric filter is set to zero\n- [ ] Unit test added for zero and other falsy edge cases",
+  "labels": ["devin-remediate", "bug", "frontend"]
+}

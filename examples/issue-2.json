@@ -1,0 +1,7 @@
+{
+  "issueNumber": 2,
+  "issueTitle": "Backend: normalize empty string input in time range parsing path",
+  "issueUrl": "https://github.com/AFadhluddin/superset/issues/2",
+  "issueBody": "## Summary\nOpen-ended time ranges with an empty bound (e.g. `\"start of this month : \"`) fail or produce incorrect results because empty strings are no longer normalized to `None` during parsing.\n\n## Expected behavior\n- Empty string bounds in colon-separated time ranges should be treated the same as missing input (`None`).\n- Valid closed ranges (e.g. `\"2018-01-01T00:00:00 : 2018-12-31T23:59:59\"`) should continue to work.\n- `\"Last 7 days\"` and other shorthand ranges should be unaffected.\n\n## Actual behavior\nWhen the `until` (or `since`) side of a time range string is empty after splitting on `\" : \"`, the parser attempts to evaluate `DATETIME('')` instead of returning `None` for that bound.\n\n## Affected area\n`get_since_until()` in `superset/utils/date_parser.py`, in the loop that partitions colon-separated time range strings.\n\n## Acceptance criteria\n- [ ] `get_since_until(\"start of this month : \")` returns `(since_datetime, None)`\n- [ ] `get_since_until(\" : now\")` returns `(None, until_datetime)`\n- [ ] Valid closed time ranges continue to parse correctly\n- [ ] Unit test added for empty-string bound normalization\n- [ ] Existing `test_get_since_until` passes",
+  "labels": ["devin-remediate", "bug", "backend"]
+}
