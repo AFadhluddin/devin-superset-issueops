@@ -8,8 +8,6 @@ export type IssueInput = {
   labels: string[];
 };
 
-const SYNTHETIC_TARGET_COMMIT = "7cf146b4653a81880af7ab338eb0bae997b2b9ba";
-
 export function buildRemediationPrompt(issue: IssueInput): string {
   return `You are remediating a GitHub issue in my fork of Apache Superset.
 
@@ -18,9 +16,6 @@ https://github.com/${config.GITHUB_OWNER}/${config.GITHUB_REPO}
 
 Target branch:
 ${config.GITHUB_TARGET_BRANCH}
-
-Synthetic remediation target commit:
-${SYNTHETIC_TARGET_COMMIT}
 
 GitHub issue:
 ${issue.issueUrl}

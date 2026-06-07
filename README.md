@@ -16,7 +16,7 @@ GitHub issue is opened or labeled with `devin-remediate`, the service:
 4. Programmatically starts a **Devin session** via the Devin v3 API.
 5. Persists the session id / link and exposes workflow status and metrics.
 
-Devin is instructed to check out the `devin-demo-target` branch, implement the
+Devin is instructed to check out the `master` branch, implement the
 smallest safe fix, add targeted tests, run them, and open a **draft PR**.
 
 ## 2. Why this matters
@@ -85,7 +85,7 @@ cp .env.example .env
 | `PORT` | no | `3000` | HTTP port |
 | `GITHUB_OWNER` | **yes** | — | GitHub username/org that owns the Superset fork |
 | `GITHUB_REPO` | no | `superset` | Repository name |
-| `GITHUB_TARGET_BRANCH` | no | `devin-demo-target` | Branch Devin should base its work on |
+| `GITHUB_TARGET_BRANCH` | no | `master` | Branch Devin should base its work on (PRs target this branch) |
 | `GITHUB_TOKEN` | no | — | Reserved for future GitHub API usage |
 | `GITHUB_WEBHOOK_SECRET` | no | — | Reserved for webhook signature verification |
 | `DEVIN_API_KEY` | **yes** | — | Devin API key (Bearer token) |
@@ -98,13 +98,48 @@ cp .env.example .env
 **Docker is the expected way to run the submitted solution.** The image builds
 the TypeScript and starts the service with `npm start`.
 
+### Full demo run order
+
+1. **Terminal 1 — build and start the service in Docker:**
+
 ```bash
 cp .env.example .env
 # fill in DEVIN_API_KEY, DEVIN_ORG_ID, GITHUB_OWNER
 docker compose up --build
 ```
 
-Verify the service is up:
+   Wait for `devin-superset-issueops listening on http://localhost:3000`.
+
+2. **Browser — open the live dashboard:**
+
+   <http://localhost:3000/dashboard>
+
+3. **Terminal 2 — (only for real GitHub webhooks) expose the port** with
+   Cloudflare Tunnel, then set the printed URL as the GitHub webhook Payload URL
+   (`https://<...>.trycloudflare.com/webhooks/github`, see section 9):
+
+```bash
+cloudflared tunnel --url http://localhost:3000
+```
+
+4. **Trigger a workflow** (either path):
+   - **Real (event-driven):** label an issue `devin-remediate` in
+     `AFadhluddin/superset` — the remediation agent starts automatically.
+   - **Deterministic (no GitHub needed):**
+
+```bash
+curl -X POST http://localhost:3000/simulate/issue \
+  -H "Content-Type: application/json" \
+  -d @examples/issue-1.json
+```
+
+5. **Watch it progress** on the dashboard (auto-refreshes every 10s) or via the
+   JSON endpoints below.
+
+> To stop everything: `Ctrl-C` in each terminal, then `docker compose down` to
+> remove the container. Workflow state in `./.data` persists for the next run.
+
+### Verify the service is up
 
 ```bash
 curl http://localhost:3000/

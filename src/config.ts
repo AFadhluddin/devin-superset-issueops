@@ -7,7 +7,7 @@ const configSchema = z.object({
   GITHUB_WEBHOOK_SECRET: z.string().optional(),
   GITHUB_OWNER: z.string().min(1, "GITHUB_OWNER is required"),
   GITHUB_REPO: z.string().default("superset"),
-  GITHUB_TARGET_BRANCH: z.string().default("devin-demo-target"),
+  GITHUB_TARGET_BRANCH: z.string().default("master"),
   DEVIN_API_KEY: z.string().min(1, "DEVIN_API_KEY is required"),
   DEVIN_ORG_ID: z.string().min(1, "DEVIN_ORG_ID is required"),
   DEVIN_CREATE_AS_USER_ID: z.string().optional(),
