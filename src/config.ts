@@ -12,6 +12,10 @@ const configSchema = z.object({
   DEVIN_ORG_ID: z.string().min(1, "DEVIN_ORG_ID is required"),
   DEVIN_CREATE_AS_USER_ID: z.string().optional(),
   TRIGGER_LABEL: z.string().default("devin-remediate"),
+  // Optional: when set, the orchestrator posts notifications to Slack directly
+  // (chat.postMessage) on PR-open and validation-complete events.
+  SLACK_BOT_TOKEN: z.string().optional(),
+  SLACK_CHANNEL: z.string().default("#megacorp-engineering"),
 });
 
 const parsed = configSchema.safeParse(process.env);

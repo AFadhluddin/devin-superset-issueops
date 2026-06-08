@@ -9,6 +9,7 @@ import {
   type ValidationPromptInput,
 } from "./prompts.js";
 import { createDevinSession, getDevinSession } from "./devin.js";
+import { notifyPrOpened, notifyValidationResult } from "./slack.js";
 import {
   createWorkflow,
   saveWorkflow,
@@ -428,6 +429,17 @@ async function handlePullRequestEvent(
     `[workflow] validation agent started for PR #${prNumber ?? "?"}: workflow=${workflow.id} session=${validationSessionId ?? "unknown"}.`,
   );
 
+  // Best-effort Slack notification from the orchestrator itself.
+  await notifyPrOpened({
+    issueNumber: workflow.issue.issueNumber,
+    issueUrl: workflow.issue.issueUrl,
+    issueTitle: workflow.issue.issueTitle,
+    prUrl,
+    ...(prNumber !== undefined ? { prNumber } : {}),
+    ...(validationSessionUrl !== undefined ? { validationSessionUrl } : {}),
+    isUpdate: action !== "opened" && action !== "reopened",
+  });
+
   return {
     json: {
       ok: true,
@@ -445,7 +457,9 @@ type IssueCommentEventPayload = {
   issue?: { html_url?: string; number?: number; pull_request?: unknown };
 };
 
-function handleIssueCommentEvent(payload: IssueCommentEventPayload): WebhookOutcome {
+async function handleIssueCommentEvent(
+  payload: IssueCommentEventPayload,
+): Promise<WebhookOutcome> {
   const action = payload.action ?? "";
   console.log(`[webhook] received issue_comment/${action || "unknown"}.`);
 
@@ -489,6 +503,25 @@ function handleIssueCommentEvent(payload: IssueCommentEventPayload): WebhookOutc
   saveWorkflow(workflow);
 
   console.log(`[workflow] validation result for workflow=${workflow.id}: ${workflow.status}.`);
+
+  // Best-effort Slack notification of the validation outcome.
+  if (
+    workflow.status === "ready_for_review" ||
+    workflow.status === "validation_failed" ||
+    workflow.status === "needs_human_review"
+  ) {
+    await notifyValidationResult({
+      status: workflow.status,
+      issueNumber: workflow.issue.issueNumber,
+      issueUrl: workflow.issue.issueUrl,
+      issueTitle: workflow.issue.issueTitle,
+      ...(workflow.prUrl !== undefined ? { prUrl: workflow.prUrl } : {}),
+      ...(workflow.prNumber !== undefined ? { prNumber: workflow.prNumber } : {}),
+      ...(workflow.validationSessionUrl !== undefined
+        ? { validationSessionUrl: workflow.validationSessionUrl }
+        : {}),
+    });
+  }
 
   return { json: { ok: true, workflowId: workflow.id, status: workflow.status } };
 }
@@ -721,7 +754,7 @@ app.post("/webhooks/github", async (req: Request, res: Response) => {
         break;
       case "issue_comment":
         console.log(`[webhook] dispatching issue_comment action=${action}`);
-        outcome = handleIssueCommentEvent(req.body as IssueCommentEventPayload);
+        outcome = await handleIssueCommentEvent(req.body as IssueCommentEventPayload);
         break;
       case "pull_request_review":
         console.log(`[webhook] ignoring event "pull_request_review".`);

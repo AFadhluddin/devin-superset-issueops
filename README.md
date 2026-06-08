@@ -92,6 +92,8 @@ cp .env.example .env
 | `DEVIN_ORG_ID` | **yes** | — | Devin organization id |
 | `DEVIN_CREATE_AS_USER_ID` | no | — | Optional Devin user to attribute sessions to |
 | `TRIGGER_LABEL` | no | `devin-remediate` | Label that triggers a workflow |
+| `SLACK_BOT_TOKEN` | no | — | Slack bot token (`xoxb-…`); when set, the orchestrator posts Slack notifications |
+| `SLACK_CHANNEL` | no | `#megacorp-engineering` | Channel name (`#name`) or ID (`C…`) to post to |
 
 ## 6. Running with Docker (recommended)
 
@@ -402,6 +404,22 @@ agents, and overall workflow health at a glance. It shows:
 ```bash
 open http://localhost:3000/dashboard   # macOS
 ```
+
+### Slack notifications
+
+When `SLACK_BOT_TOKEN` is set, the **orchestrator itself** posts to Slack
+(`chat.postMessage`) — independent of Devin — so delivery is reliable and fully
+in our control. It notifies `SLACK_CHANNEL` on two events:
+
+- **Remediation PR opened / updated** → validation agent started (with links to
+  the issue, PR, and validation Devin session).
+- **Validation complete** → PASSED / FAILED / needs-human-review, derived from
+  the `ISSUEOPS_VALIDATION_*` marker in the PR comment.
+
+The bot token needs `chat:write` (and `chat:write.public` to post to public
+channels it hasn't been invited to). This is best-effort: if Slack is not
+configured or a post fails, it is logged and never blocks the workflow — the PR
+comment remains the authoritative validation record.
 
 ### Manual status refresh
 

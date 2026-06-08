@@ -118,7 +118,8 @@ Your task:
    - which areas are touched: frontend, backend, tests, config
    - a risk level (Low / Medium / High) per area
 
-4. Comment on the PR with:
+4. Comment on the PR — this PR comment is the PRIMARY, authoritative
+   validation record. Include:
    - tests run and their pass/fail result
    - the blast-radius summary from step 3
    - concerns / remaining risks
@@ -131,14 +132,15 @@ Your task:
      Tests --> Risk["overall blast radius: Low/Medium/High"]
    \`\`\`
 
-5. Post a summary to Slack using your built-in Slack integration:
-   - Post to the channel \`${SLACK_CHANNEL}\`.
-   - Include: the PR link, source issue, pass/fail result, the blast-radius
-     summary, and the same Mermaid chart from step 4 (in a thread/message).
-   - This is best-effort: if your Slack integration is unavailable, you do not
-     have access to \`${SLACK_CHANNEL}\`, or posting fails for any reason, log
-     that Slack posting was skipped and CONTINUE. Do not let a Slack failure
-     block validation — the PR comment must still be posted either way.
+5. Team notification to Slack (\`${SLACK_CHANNEL}\`):
+   - Devin's native Slack integration is configured to post repository/session
+     updates to \`${SLACK_CHANNEL}\` automatically, so the team is notified there
+     about this session and PR without any action from you.
+   - Additionally, ONLY IF a working Slack tool is actually available to you,
+     you may post the summary + Mermaid chart to \`${SLACK_CHANNEL}\` as a bonus.
+   - This is strictly best-effort and must NEVER block or slow validation: if no
+     Slack tool is available, or a post fails for any reason, do not retry and
+     do not treat it as an error. The PR comment is the source of truth.
 
 6. If the implementation is incomplete and the fix is small, push a minimal
    follow-up commit to the same PR branch.
