@@ -64,6 +64,8 @@ export type ValidationPromptInput = {
   prHeadSha?: string;
 };
 
+const SLACK_CHANNEL = "#megacorp-engineering";
+
 export function buildValidationPrompt(input: ValidationPromptInput): string {
   return `You are the Test/Validation Agent for a Devin-created PR in Apache Superset.
 
@@ -98,15 +100,50 @@ PR head SHA:
 ${input.prHeadSha}
 
 Your task:
-1. Inspect the PR diff.
-2. Verify the original issue acceptance criteria.
-3. Identify and run the smallest relevant test set.
+
+1. Inspect the PR and gather:
+   - PR URL and the source issue it remediates
+   - changed files
+   - tests added or updated
+   - commands run (if visible in the PR description or CI)
+   - remaining risks
+   - whether the PR looks ready for review
+
+2. Verify the original issue's acceptance criteria, then identify and run the
+   smallest relevant test set that proves the fix.
+
+3. Produce a blast-radius summary:
+   - affected files / modules
+   - rough dependency impact (what else imports or depends on the changed code)
+   - which areas are touched: frontend, backend, tests, config
+   - a risk level (Low / Medium / High) per area
+
 4. Comment on the PR with:
-   - tests run
-   - pass/fail result
-   - concerns
-5. If the implementation is incomplete and the fix is small, push a minimal follow-up commit to the same PR branch.
-6. Do not broaden scope or refactor unrelated code.
+   - tests run and their pass/fail result
+   - the blast-radius summary from step 3
+   - concerns / remaining risks
+   - a Slack-ready chart of the change, preferring a Mermaid diagram, e.g.:
+
+   \`\`\`mermaid
+   graph TD
+     Issue["Issue #${input.issueNumber}"] --> Change["primary changed file(s)"]
+     Change --> Tests["test file(s)"]
+     Tests --> Risk["overall blast radius: Low/Medium/High"]
+   \`\`\`
+
+5. Post a summary to Slack using your built-in Slack integration:
+   - Post to the channel \`${SLACK_CHANNEL}\`.
+   - Include: the PR link, source issue, pass/fail result, the blast-radius
+     summary, and the same Mermaid chart from step 4 (in a thread/message).
+   - This is best-effort: if your Slack integration is unavailable, you do not
+     have access to \`${SLACK_CHANNEL}\`, or posting fails for any reason, log
+     that Slack posting was skipped and CONTINUE. Do not let a Slack failure
+     block validation — the PR comment must still be posted either way.
+
+6. If the implementation is incomplete and the fix is small, push a minimal
+   follow-up commit to the same PR branch.
+
+7. Do not broaden scope or refactor unrelated code.
 
 End your PR comment with exactly one of these machine-readable markers:
 ISSUEOPS_VALIDATION_PASSED
